@@ -1,0 +1,34 @@
+(
+ (:floor -3 0 11 7 0 11)
+ (:wall -3 0 -4 7 0 -4)
+ (:wall -4 0 -4 -4 0 10)
+ (:wall 8 0 -4 8 0 10)
+
+ (:player 2 0 10 3)
+ (:ball 0 0 4)
+
+ (:block 2 0 3)
+
+ (:block 1 0 2)
+ (:block 2 0 2)
+ (:block 3 0 2)
+
+ (:block 0 0 1)
+ (:block 1 0 1)
+ (:block 2 0 1)
+ (:block 3 0 1)
+ (:block 4 0 1)
+
+ (:block 1 0 0)
+ (:block 3 0 0)
+
+ (:block 1 1 2)
+ (:block 2 1 2)
+ (:block 3 1 2)
+
+ (:block 0 2 1)
+ (:block 1 2 1)
+ (:block 2 2 1)
+ (:block 3 2 1)
+ (:block 4 2 1)
+ )

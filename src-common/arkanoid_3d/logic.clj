@@ -9,42 +9,21 @@
 (def velocity 0.5)
 (def gravity 2)
 
-(defn- initial-entities
+(defn- load-map
   [screen]
-  (vector
-   (create-floor screen -3 0 11 7 0 11)
-   (create-wall screen -3 0 -4 7 0 -4)
-   (create-wall screen -4 0 -4 -4 0 10)
-   (create-wall screen 8 0 -4 8 0 10)
-
-   (create-player screen 2 0 10 3)
-   (create-ball screen 0 0 4)
-
-   (create-block screen 2 0 3)
-
-   (create-block screen 1 0 2)
-   (create-block screen 2 0 2)
-   (create-block screen 3 0 2)
-
-   (create-block screen 0 0 1)
-   (create-block screen 1 0 1)
-   (create-block screen 2 0 1)
-   (create-block screen 3 0 1)
-   (create-block screen 4 0 1)
-
-   (create-block screen 1 0 0)
-   (create-block screen 3 0 0)
-
-   (create-block screen 1 1 2)
-   (create-block screen 2 1 2)
-   (create-block screen 3 1 2)
-
-   (create-block screen 0 2 1)
-   (create-block screen 1 2 1)
-   (create-block screen 2 2 1)
-   (create-block screen 3 2 1)
-   (create-block screen 4 2 1)
-   ))
+  (let [fileHandle (files! :internal "map.edn")
+        content (read-string (.readString fileHandle))]
+    (map (fn [entity]
+           (let [entity-type (first entity)
+                 entity-args (rest entity)]
+             (case entity-type
+               :floor (apply create-floor screen entity-args)
+               :wall (apply create-wall screen entity-args)
+               :player (apply create-player screen entity-args)
+               :ball (apply create-ball screen entity-args)
+               :block (apply create-block screen entity-args)
+               (/ 0 0))))
+         content)))
 
 (defn- handle-look-first-person!
   [screen]
@@ -146,7 +125,7 @@
 (defn- handle-collision
   [screen entities collide-entity collision-rect]
   (if (:floor? collide-entity)
-    (initial-entities screen)
+    (load-map screen)
     (filter
      some?
      (map (fn [entity]
@@ -247,4 +226,4 @@
                                   (direction! 0 0 0)
                                   (near! 0.1)
                                   (far! 300)))]
-    (initial-entities screen)))
+    (load-map screen)))
