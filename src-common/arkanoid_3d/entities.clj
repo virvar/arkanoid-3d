@@ -1,5 +1,5 @@
 (ns arkanoid-3d.entities
-  (:require [play-clj.core :refer :all]
+  (:require [play-clj.core :refer :all :as play]
             [play-clj.g3d :refer :all]
             [play-clj.math :refer :all]
             [play-clj.ui :refer :all])
@@ -8,16 +8,12 @@
 (def tile-size 2)
 (def initial-ball-velocity (vector-3 0.2 0 0.2))
 
-
-(defn create-wall
-  [screen x1 y1 z1 x2 y2 z2]
-  (let [attr (attribute! :color :create-diffuse (color :yellow))
+(defn- create-box
+  [x y z width height depth color]
+  (let [attr (attribute! :color :create-diffuse color)
         model-mat (material :set attr)
         model-attrs (bit-or (usage :position) (usage :normal))
-        builder (model-builder)
-        width (* (inc (- x2 x1)) tile-size)
-        height (* (inc (- y2 y1)) tile-size)
-        depth (* (inc (- z2 z1)) tile-size)]
+        builder (model-builder)]
     (-> (model-builder! builder :create-box
                         width
                         height
@@ -25,98 +21,71 @@
                         model-mat model-attrs)
         model
         (assoc
-          :x (* (/ (+ x1 x2) 2) tile-size)
-          :y (* (/ (+ y1 y2) 2) tile-size)
-          :z (* (/ (+ z1 z2) 2) tile-size)
+          :x x
+          :y y
+          :z z
           :width width
           :height height
-          :depth depth
-          :wall? true))))
+          :depth depth))))
 
-(defn create-floor
-  [screen x1 y1 z1 x2 y2 z2]
-  (let [attr (attribute! :color :create-diffuse (color :red))
-        model-mat (material :set attr)
-        model-attrs (bit-or (usage :position) (usage :normal))
-        builder (model-builder)
-        width (* (inc (- x2 x1)) tile-size)
-        height (* (inc (- y2 y1)) tile-size)
-        depth (* (inc (- z2 z1)) tile-size)]
-    (-> (model-builder! builder :create-box
-                        width
-                        height
-                        depth
-                        model-mat model-attrs)
-        model
-        (assoc
-          :x (* (/ (+ x1 x2) 2) tile-size)
-          :y (* (/ (+ y1 y2) 2) tile-size)
-          :z (* (/ (+ z1 z2) 2) tile-size)
-          :width width
-          :height height
-          :depth depth
-          :floor? true))))
-
-(defn create-block
-  [screen x y z]
-  (let [attr (attribute! :color :create-diffuse (color :blue))
-        model-mat (material :set attr)
-        model-attrs (bit-or (usage :position) (usage :normal))
-        builder (model-builder)
-        half-size (/ tile-size 2)]
-    (-> (model-builder! builder :create-box tile-size tile-size tile-size model-mat model-attrs)
-        model
-        (assoc
-          :x (* x tile-size)
-          :y (* y tile-size)
-          :z (* z tile-size)
-          :width tile-size
-          :height tile-size
-          :depth tile-size
-          :block? true))))
-
-(defn create-player
-  [screen x y z length]
-  (let [attr (attribute! :color :create-diffuse (color :green))
-        model-mat (material :set attr)
-        model-attrs (bit-or (usage :position) (usage :normal))
-        builder (model-builder)
-        width (* length tile-size)
+(defn- create-unit-box
+  [x y z color]
+  (let [x (* x tile-size)
+        y (* y tile-size)
+        z (* z tile-size)
+        width tile-size
         height tile-size
         depth tile-size]
-    (-> (model-builder! builder :create-box
-                        width height depth
-                        model-mat model-attrs)
-        model
-        (assoc
-          :x (* x tile-size)
-          :y (* y tile-size)
-          :z (* z tile-size)
-          :width width
-          :height height
-          :depth depth
-          :player? true))))
+    (create-box x y z width height depth color)))
+
+(defn- create-box-by-ends
+  [x1 y1 z1 x2 y2 z2 color]
+  (let [x (* (/ (+ x1 x2) 2) tile-size)
+        y (* (/ (+ y1 y2) 2) tile-size)
+        z (* (/ (+ z1 z2) 2) tile-size)
+        width (* (inc (- x2 x1)) tile-size)
+        height (* (inc (- y2 y1)) tile-size)
+        depth (* (inc (- z2 z1)) tile-size)]
+    (create-box x y z width height depth color)))
+
+
+(defn create-wall
+  [x1 y1 z1 x2 y2 z2]
+  (let [color (play/color :yellow)
+        box (create-box-by-ends x1 y1 z1 x2 y2 z2 color)]
+    (assoc box :wall? true)))
+
+(defn create-floor
+  [x1 y1 z1 x2 y2 z2]
+  (let [color (play/color :red)
+        box (create-box-by-ends x1 y1 z1 x2 y2 z2 color)]
+    (assoc box :floor? true)))
+
+(defn create-block
+  [x y z]
+  (let [color (play/color :blue)
+        box (create-unit-box x y z color)]
+    (assoc box :block? true)))
+
+(defn create-player
+  [x y z length]
+  (let [x (* x tile-size)
+        y (* y tile-size)
+        z (* z tile-size)
+        width (* length tile-size)
+        height tile-size
+        depth tile-size
+        color (play/color :green)
+        box (create-box x y z width height depth color)]
+    (assoc box :player? true)))
 
 (defn create-ball
-  [screen x y z]
-  (let [attr (attribute! :color :create-diffuse (color :purple))
-        model-mat (material :set attr)
-        model-attrs (bit-or (usage :position) (usage :normal))
-        builder (model-builder)
-        half-size (/ tile-size 2)]
-    (-> (model-builder! builder :create-box
-                        tile-size tile-size tile-size
-                        model-mat model-attrs)
-        model
-        (assoc
-          :x (* x tile-size)
-          :y (* y tile-size)
-          :z (* z tile-size)
-          :width tile-size
-          :height tile-size
-          :depth tile-size
-          :velocity initial-ball-velocity
-          :ball? true))))
+  [x y z]
+  (let [color (play/color :purple)
+        box (create-unit-box x y z color)]
+    (assoc box
+      :ball? true
+      :velocity initial-ball-velocity)))
 
 (defn create-environment
   [screen]

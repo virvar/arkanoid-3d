@@ -10,18 +10,18 @@
 (def gravity 2)
 
 (defn- load-map
-  [screen]
+  []
   (let [fileHandle (files! :internal "map.edn")
         content (read-string (.readString fileHandle))]
     (map (fn [entity]
            (let [entity-type (first entity)
                  entity-args (rest entity)]
              (case entity-type
-               :floor (apply create-floor screen entity-args)
-               :wall (apply create-wall screen entity-args)
-               :player (apply create-player screen entity-args)
-               :ball (apply create-ball screen entity-args)
-               :block (apply create-block screen entity-args)
+               :floor (apply create-floor entity-args)
+               :wall (apply create-wall entity-args)
+               :player (apply create-player entity-args)
+               :ball (apply create-ball entity-args)
+               :block (apply create-block entity-args)
                (/ 0 0))))
          content)))
 
@@ -125,7 +125,7 @@
 (defn- handle-collision
   [screen entities collide-entity collision-rect]
   (if (:floor? collide-entity)
-    (load-map screen)
+    (load-map)
     (filter
      some?
      (map (fn [entity]
@@ -222,8 +222,8 @@
                         :renderer (model-batch)
                         :attributes (create-environment screen)
                         :camera (doto (perspective 75 (game :width) (game :height))
-                                  (position! 5 20 30)
-                                  (direction! 0 0 0)
+                                  (position! 5 20 32)
+                                  (direction! 5 0 0)
                                   (near! 0.1)
                                   (far! 300)))]
-    (load-map screen)))
+    (load-map)))
