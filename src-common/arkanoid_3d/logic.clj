@@ -124,37 +124,57 @@
 
 (defn- handle-collision
   [screen entities collide-entity collision-rect]
-  (if (:floor? collide-entity)
-    (load-map)
-    (filter
-     some?
-     (map (fn [entity]
-            (cond
-             (:ball? entity)
-             (let [velocity (:velocity entity)
-                   collision-width (rectangle! collision-rect :get-width)
-                   collision-height (rectangle! collision-rect :get-height)
-                   distinction (- collision-width collision-height)
-                   error 0.1]
-               (cond
-                (or (< 0 distinction error)
-                    (< 0 (- distinction) error))
-                (-> entity
-                    (assoc :velocity (vector-3 (- (x velocity)) (y velocity) (- (z velocity))))
-                    (update :x #((if (< (x velocity) 0) + -) % (* collision-width 2)))
-                    (update :z #((if (< (z velocity) 0) + -) % (* collision-height 2))))
-                (> collision-width collision-height)
-                (-> entity
-                    (assoc :velocity (vector-3 (x velocity) (y velocity) (- (z velocity))))
-                    (update :z #((if (< (z velocity) 0) + -) % (* collision-height 2))))
-                (< collision-width collision-height)
-                (-> entity
-                    (assoc :velocity (vector-3 (- (x velocity)) (y velocity) (z velocity)))
-                    (update :x #((if (< (x velocity) 0) + -) % (* collision-width 2))))))
-             (and (= entity collide-entity) (:block? entity))
-             nil
-             :default entity))
-          entities))))
+  (cond
+   (:floor? collide-entity)
+   (load-map)
+   (:player? collide-entity)
+   (map (fn [entity]
+          (if (:ball? entity)
+            (let [velocity (:velocity entity)
+                  collision-width (rectangle! collision-rect :get-width)
+                  collision-height (rectangle! collision-rect :get-height)
+                  distinction (- collision-width collision-height)
+                  center-x (+ (rectangle! collision-rect :get-x)
+                              (/ collision-width 2))
+                  player-center-x (:x collide-entity)
+                  k (* (/ (- center-x player-center-x) (/ (:width collide-entity) 2)) 2)
+                  new-velocity-x (+ (x (:velocity entity))
+                                    (* k max-ball-velocity))]
+              (-> entity
+                  (assoc :velocity (vector-3 new-velocity-x (y velocity) (- (z velocity))))
+                  (update :z #((if (< (z velocity) 0) + -) % (* collision-height 2)))))
+            entity))
+        entities)
+   :default
+   (filter
+    some?
+    (map (fn [entity]
+           (cond
+            (:ball? entity)
+            (let [velocity (:velocity entity)
+                  collision-width (rectangle! collision-rect :get-width)
+                  collision-height (rectangle! collision-rect :get-height)
+                  distinction (- collision-width collision-height)
+                  error 0.1]
+              (cond
+               (or (< 0 distinction error)
+                   (< 0 (- distinction) error))
+               (-> entity
+                   (assoc :velocity (vector-3 (- (x velocity)) (y velocity) (- (z velocity))))
+                   (update :x #((if (< (x velocity) 0) + -) % (* collision-width 2)))
+                   (update :z #((if (< (z velocity) 0) + -) % (* collision-height 2))))
+               (> collision-width collision-height)
+               (-> entity
+                   (assoc :velocity (vector-3 (x velocity) (y velocity) (- (z velocity))))
+                   (update :z #((if (< (z velocity) 0) + -) % (* collision-height 2))))
+               (< collision-width collision-height)
+               (-> entity
+                   (assoc :velocity (vector-3 (- (x velocity)) (y velocity) (z velocity)))
+                   (update :x #((if (< (x velocity) 0) + -) % (* collision-width 2))))))
+            (and (= entity collide-entity) (:block? entity))
+            nil
+            :default entity))
+         entities))))
 
 (defn- check-collision
   [screen entities entity]

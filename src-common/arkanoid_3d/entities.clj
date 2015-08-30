@@ -7,6 +7,7 @@
 
 (def tile-size 2)
 (def initial-ball-velocity (vector-3 0.2 0 0.2))
+(def max-ball-velocity 0.2)
 
 (defn- create-box
   [x y z width height depth color]
@@ -48,6 +49,30 @@
         depth (* (inc (- z2 z1)) tile-size)]
     (create-box x y z width height depth color)))
 
+(defn- create-sphere
+  [x y z width height depth color]
+  (let [attr (attribute! :color :create-diffuse color)
+        model-mat (material :set attr)
+        model-attrs (bit-or (usage :position) (usage :normal))
+        builder (model-builder)
+        divisions-u 20
+        divisions-v 20]
+    (-> (model-builder! builder :create-sphere
+                        width
+                        height
+                        depth
+                        divisions-u
+                        divisions-v
+                        model-mat model-attrs)
+        model
+        (assoc
+          :x x
+          :y y
+          :z z
+          :width width
+          :height height
+          :depth depth))))
+
 
 (defn create-wall
   [x1 y1 z1 x2 y2 z2]
@@ -76,7 +101,7 @@
         height tile-size
         depth tile-size
         color (play/color :green)
-        box (create-box x y z width height depth color)]
+        box (create-sphere x y z width height depth color)]
     (assoc box :player? true)))
 
 (defn create-ball
