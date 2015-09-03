@@ -7,7 +7,7 @@
 
 (def tile-size 2)
 (def initial-ball-velocity (vector-3 0.2 0 0.2))
-(def max-ball-velocity 0.2)
+(def max-ball-velocity 0.4)
 
 (defn- create-box
   [x y z width height depth color]

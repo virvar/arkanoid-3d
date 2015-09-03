@@ -138,10 +138,17 @@
                               (/ collision-width 2))
                   player-center-x (:x collide-entity)
                   k (* (/ (- center-x player-center-x) (/ (:width collide-entity) 2)) 2)
-                  new-velocity-x (+ (x (:velocity entity))
-                                    (* k max-ball-velocity))]
+                  new-velocity-x (/ (+ (x (:velocity entity))
+                                       (* k max-ball-velocity)) 2)
+
+                  center-z (+ (rectangle! collision-rect :get-y)
+                              (/ collision-height 2))
+                  player-center-z (:z collide-entity)
+                  k (* (/ (- center-z player-center-z) (/ (:depth collide-entity) 2)) 2)
+                  new-velocity-z (/ (+ (z (:velocity entity))
+                                       (* k max-ball-velocity)) 2)]
               (-> entity
-                  (assoc :velocity (vector-3 new-velocity-x (y velocity) (- (z velocity))))
+                  (assoc :velocity (vector-3 new-velocity-x (y velocity) new-velocity-z))
                   (update :z #((if (< (z velocity) 0) + -) % (* collision-height 2)))))
             entity))
         entities)
